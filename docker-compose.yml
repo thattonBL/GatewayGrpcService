@@ -1,0 +1,31 @@
+version: '3.4'
+
+networks:
+  gatewaynetwork:
+    driver: bridge
+
+services:
+  gatewaydb:
+    container_name: gateway-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+        - "8002:1433"
+    environment:
+        - ACCEPT_EULA=Y
+        - SA_PASSWORD=password@12345#
+    networks:
+        - gatewaynetwork
+  gatewaygrpcservice:
+    container_name: gateway-grpc-service
+    image: ${DOCKER_REGISTRY-}gatewaygrpcservice
+    build:
+      context: .
+      dockerfile: GatewayGrpcService/Dockerfile
+    depends_on:
+        - gatewaydb
+    environment:
+        - DB_HOST=gatewaydb
+        - DB_NAME=Gateway
+        - DB_SA_PASSWORD=password@12345#
+    networks:
+        - gatewaynetwork

@@ -22,16 +22,6 @@ namespace GatewayGrpcService
                 connectionString = connectionString.Replace("{#host}", dbHost).Replace("{#dbName}", dbName).Replace("{#dbPassword}", dbPassword);
             }
 
-            //builder.Services.AddSingleton(x =>
-            //{
-            //    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            //    return GrpcChannel.ForAddress("http://localhost:5001",
-            //        channelOptions: new GrpcChannelOptions()
-            //        {
-            //            Credentials = ChannelCredentials.Insecure
-            //        });
-            //});
-
             builder.Services.AddScoped<IGatewayRequestQueries>(sp => new GatewayRequestQueries(connectionString));
             builder.Services.AddGrpc().AddJsonTranscoding();
             builder.Services.AddGrpcReflection();

@@ -2,3 +2,6 @@
 GatewayGrpcService/bin
 GatewayGrpcService/obj
 obj
+.vs/GatewayGrpcService/config
+.vs/GatewayGrpcService/DesignTimeBuild
+.vs/GatewayGrpcService/v17

@@ -50,7 +50,7 @@ services:
       depends_on:
             - gatewaydb
       environment:
-            - DB_HOST=gatewaydb
+            - DB_HOST=gateway-db
             - DB_NAME=Gateway
             - DB_SA_PASSWORD=password@12345#
       networks:

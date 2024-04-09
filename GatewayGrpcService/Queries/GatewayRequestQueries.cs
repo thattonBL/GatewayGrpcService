@@ -27,7 +27,7 @@ namespace GatewayGrpcService.Queries
                         throw new Exception(ex.Message);
                     }
                 }
-                return await connection.QueryAsync<RSIMessage>("spGetRsiMessages", commandType: CommandType.StoredProcedure);
+                return await connection.QueryAsync<RSIMessage>("dbo.spGetRsiMessages", commandType: CommandType.StoredProcedure);
             }     
         }
     }

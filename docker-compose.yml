@@ -9,49 +9,60 @@ volumes:
       driver: local
 
 services:
-  gatewaydb:
-    container_name: gateway-db
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    stdin_open: true
-    ports:
-        - "1433:1433"
-    environment:
-        - ACCEPT_EULA=Y
-        - SA_PASSWORD=password@12345#
-    restart: always
-    networks:
-     - gatewaynetwork
-    healthcheck:
-        test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P password@12345# -Q 'SELECT 1' || exit 1" ]
-        interval: 10s
-        timeout: 5s
-        retries: 10
-        start_period: 10s
-    volumes:
-           - ./gatewaydb_data:/docker-entrypoint-initdb.d
-  gatewaydb.conficurator:
-        image: mcr.microsoft.com/mssql-tools:latest
-        container_name: gateway-db-configurator
-        user: root
-        volumes:
-           - ./gatewaydb_data:/docker-entrypoint-initdb.d
-        depends_on:
-           gatewaydb:
+   gatewaygrpcdb:
+      container_name: gateway-grpc-db
+      image: mcr.microsoft.com/mssql/server:2019-latest
+      stdin_open: true
+      ports:
+         - "1434:1433"
+      environment:
+         - ACCEPT_EULA=Y
+         - SA_PASSWORD=password@12345#
+      restart: always
+      networks:
+         - gatewaynetwork
+      healthcheck:
+            test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P password@12345# -Q 'SELECT 1' || exit 1" ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
+      volumes:
+         - ./gatewaygrpcdb_data:/docker-entrypoint-initdb.d
+   gatewaygrpcdb.configurator:
+      image: mcr.microsoft.com/mssql-tools:latest
+      container_name: gateway-grpc-db-configurator
+      user: root
+      volumes:
+          - ./gatewaygrpcdb_data:/docker-entrypoint-initdb.d
+      depends_on:
+          gatewaygrpcdb:
              condition: service_healthy
-        command: bash -c '/opt/mssql-tools/bin/sqlcmd -S gateway-db -U sa -P password@12345# -i /docker-entrypoint-initdb.d/init.sql; echo "------------------------------ALLLL DONNNNNNEEEEEE!!!!---------------------------------";'
-        networks:
-           - gatewaynetwork
-  gatewaygrpcservice:
+      command: bash -c '/opt/mssql-tools/bin/sqlcmd -S gateway-grpc-db -U sa -P password@12345# -i /docker-entrypoint-initdb.d/init.sql; echo "--GRPC DATABASE CONFIGURED------";'
+      networks:
+         - gatewaynetwork
+   gatewaygrpcservice:
       container_name: gateway-grpc-service
       image: ${DOCKER_REGISTRY-}gatewaygrpcservice
       build:
           context: .
           dockerfile: GatewayGrpcService/Dockerfile
       depends_on:
-            - gatewaydb
+            - gatewayrabbitmq
+            - gatewaygrpcdb
+            - building33mockapi
       environment:
-            - DB_HOST=gateway-db
+            - DB_HOST=gateway-grpc-db
             - DB_NAME=Gateway
             - DB_SA_PASSWORD=password@12345#
+            - MSG_HOST=gateway-rabbitmq
       networks:
             - gatewaynetwork
+   gatewayrabbitmq:
+      image: rabbitmq:3.13.1-management
+      container_name: gateway-rabbitmq
+      ports:
+          - "15672:15672"
+          - "5672:5672"
+      networks:
+          - gatewaynetwork

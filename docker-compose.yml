@@ -50,7 +50,6 @@ services:
       depends_on:
             - gatewayrabbitmq
             - gatewaygrpcdb
-            - building33mockapi
       environment:
             - DB_HOST=gateway-grpc-db
             - DB_NAME=Gateway

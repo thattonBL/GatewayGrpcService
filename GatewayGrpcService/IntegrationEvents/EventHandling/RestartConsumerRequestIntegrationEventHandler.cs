@@ -26,23 +26,40 @@ public class RestartConsumerRequestIntegrationEventHandler : IIntegrationEventHa
     }
     public async Task Handle(RestartConsumerRequestIntegrationEvent @event)
     {
-        var messages = await _gatewayRequestQueries.GetRSIMEssagesFromDbAsync();
-        var responseList = await _grpcMessageService.SendBulkRsiMessages(messages);
-        //aynsc loop to publish event for every item
-        await LoopAsync(responseList);
-        //now delete or flag as sent
-        var ackedMessages = await _gatewayRequestQueries.SetRsiMessagesToAckedAsync();
+        _logger.LogInformation("Restarting GRPC Service: {@event}.", @event);
+        try
+        {
+            var messages = await _gatewayRequestQueries.GetRSIMessagesFromDbAsync();
+            var responseList = await _grpcMessageService.SendBulkRsiMessages(messages);
+            //aynsc loop to publish event for every item
+            await LoopAsync(responseList);
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError("Error dispatching bulk messages after Grpc Service Restart message: {@message} for excaption {@exception}", ex.Message, ex);
+        }
+
+        try
+        {
+            //now delete or flag as sent
+            var ackedMessages = await _gatewayRequestQueries.SetRsiMessagesToAckedAsync();
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError("Error setting archived messages to acknowledged after Grpc Service restart. Exception message: {@message}. For exception: {@ex}", ex.Message, ex);
+        }
+        //now set the status of the service
         _messageServiceControl.messageDeliveryPaused = false;
     }
 
-    public Task DispatchPublishedEvent(RsiMessageRecievedDataModel item)
+    private Task DispatchPublishedEvent(RsiMessageRecievedDataModel item)
     {
         var newRsiPublishedEvent = new RsiMessagePublishedIntegrationEvent(item.ItemIdentity, RsiMessagePublishedIntegrationEvent.EVENT_NAME, "GatewayGrpcService");
         _eventBus.Publish(newRsiPublishedEvent);
         return Task.CompletedTask;
     }
 
-    public async Task LoopAsync(IEnumerable<RsiMessageRecievedDataModel> sentMessages)
+    private async Task LoopAsync(IEnumerable<RsiMessageRecievedDataModel> sentMessages)
     {
         List<Task> listOfTasks = new List<Task>();
 

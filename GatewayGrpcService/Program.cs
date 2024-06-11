@@ -10,6 +10,7 @@ using GatewayGrpcService.Data.Repostories;
 using Events.Common.Events;
 using GatewayGrpcService.Infrastructure;
 using GatewayGrpcService.Protos;
+using Serilog;
 
 namespace GatewayGrpcService
 {
@@ -35,6 +36,7 @@ namespace GatewayGrpcService
             builder.Services.AddScoped<IGatewayRequestQueries>(sp => new GatewayRequestQueries(connectionString));
             builder.Services.AddDbContext<GatewayGrpcContext>(options => options.UseSqlServer(connectionString));
 
+            builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
             var services = builder.Services;
 
@@ -103,6 +105,8 @@ namespace GatewayGrpcService
             app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
             app.MapSwagger();
             app.MapGrpcReflectionService();
+
+            app.UseSerilogRequestLogging();
 
             var eventBus = app.Services.GetRequiredService<IEventBus>();
             eventBus.Subscribe<NewRsiMessageSubmittedIntegrationEvent, NewRsiMessageSubmittedIntegrationEventHandler>(NewRsiMessageSubmittedIntegrationEvent.EVENT_NAME);

@@ -2,7 +2,7 @@
 {
     public interface IGatewayRequestQueries
     {
-        Task<IEnumerable<RSIMessage>> GetRSIMEssagesFromDbAsync();
+        Task<IEnumerable<RSIMessage>> GetRSIMessagesFromDbAsync();
         Task<IEnumerable<Common>> SetRsiMessagesToAckedAsync();
     }
 }

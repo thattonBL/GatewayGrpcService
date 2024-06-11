@@ -35,21 +35,37 @@ namespace GatewayGrpcService.IntegrationEvents.EventHandling
             //check to see if the servuce is paused
             if (!_messageServiceControl.messageDeliveryPaused)
             {
-                //if it isn't then send the message using the data from the event
-                await _grpcMessageService.SendSingleRsiMessage(@event.RsiMessage);
+                _logger.LogInformation("GRPC Service Active delivering message to building: {@rsi} with Identifier {@id}", @event.RsiMessage, @event.RsiMessage.Identifier);
+                try
+                {
+                    //if it isn't then send the message using the data from the event
+                    await _grpcMessageService.SendSingleRsiMessage(@event.RsiMessage);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError("Error sending message to building: {@ex}", ex);
+                }
                 // Let the global integration api know that the message ghas been published
                 var newRsiPublishedEvent = new RsiMessagePublishedIntegrationEvent(@event.RsiMessage.Identifier, RsiMessagePublishedIntegrationEvent.EVENT_NAME, "GatewayGrpcService");
                 await Task.Run(() => _eventBus.Publish(newRsiPublishedEvent));
             }
             else
             {
-                var rsiPoco = new RSI(rawRsi.CollectionCode, rawRsi.Shelfmark, rawRsi.VolumeNumber, rawRsi.StorageLocationCode, rawRsi.Author,
+                _logger.LogInformation("GRPC Service Paused archiving message: {@rsi} with Identifier {@id}", @event.RsiMessage, @event.RsiMessage.Identifier);
+
+                try {
+                    var rsiPoco = new RSI(rawRsi.CollectionCode, rawRsi.Shelfmark, rawRsi.VolumeNumber, rawRsi.StorageLocationCode, rawRsi.Author,
                                         rawRsi.Title, DateTime.ParseExact(rawRsi.PublicationDate, "dd-MM-yyyy", CultureInfo.InvariantCulture),
                                             DateTime.ParseExact(rawRsi.PeriodicalDate, "dd-MM-yyyy", CultureInfo.InvariantCulture), rawRsi.ArticleLine1, rawRsi.ArticleLine2, rawRsi.CatalogueRecordUrl, rawRsi.FurtherDetailsUrl,
                                                 rawRsi.DtRequired, rawRsi.Route, rawRsi.ReadingRoomStaffArea, rawRsi.SeatNumber, rawRsi.ReadingCategory, rawRsi.Identifier,
                                                     rawRsi.ReaderName, Int32.Parse(rawRsi.ReaderType), rawRsi.OperatorInformation, rawRsi.ItemIdentity);
 
-                await _sqlMessageServices.AddNewRsiMessage(rsiPoco);
+                    await _sqlMessageServices.AddNewRsiMessage(rsiPoco);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError("Error adding message to SQL Database: {@ex}", ex);
+                }               
             }
         }
     }   

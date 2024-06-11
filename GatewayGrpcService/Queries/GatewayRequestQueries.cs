@@ -12,7 +12,7 @@ namespace GatewayGrpcService.Queries
             _connectionString = !string.IsNullOrWhiteSpace(constr) ? constr : throw new ArgumentNullException(nameof(constr));
         }
 
-        public async Task<IEnumerable<RSIMessage>> GetRSIMEssagesFromDbAsync()
+        public async Task<IEnumerable<RSIMessage>> GetRSIMessagesFromDbAsync()
         {
             using (var connection = new SqlConnection(_connectionString))
             {

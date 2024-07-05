@@ -1,4 +1,5 @@
 ﻿using EventBus.Abstractions;
+using GatewayGrpcService.Factories;
 using GatewayGrpcService.IntegrationEvents.Events;
 using GatewayGrpcService.Models;
 using GatewayGrpcService.Queries;
@@ -14,15 +15,15 @@ public class RestartConsumerRequestIntegrationEventHandler : IIntegrationEventHa
     private readonly IEventBus _eventBus;
     private readonly ILogger _logger;
     private readonly IGatewayRequestQueries _gatewayRequestQueries;
-    private readonly GrpcMessageService _grpcMessageService;
+    private readonly IMessageDispatchService _messageDispatchService;
 
-    public RestartConsumerRequestIntegrationEventHandler(GrpcMessageService grpcMessageService,  IGatewayRequestQueries gatewayRequestQueries, IMessageServiceControl messageServiceControl, IEventBus eventBus, ILogger<RestartConsumerRequestIntegrationEventHandler> logger)
+    public RestartConsumerRequestIntegrationEventHandler(IMessageDispatchServiceFacrory messageDispatchFactory,  IGatewayRequestQueries gatewayRequestQueries, IMessageServiceControl messageServiceControl, IEventBus eventBus, ILogger<RestartConsumerRequestIntegrationEventHandler> logger)
 {
         _messageServiceControl = messageServiceControl;
         _eventBus = eventBus;
         _logger = logger;
         _gatewayRequestQueries = gatewayRequestQueries;
-        _grpcMessageService = grpcMessageService;
+        _messageDispatchService = messageDispatchFactory.GetDispatchService();
     }
     public async Task Handle(RestartConsumerRequestIntegrationEvent @event)
     {
@@ -30,7 +31,7 @@ public class RestartConsumerRequestIntegrationEventHandler : IIntegrationEventHa
         try
         {
             var messages = await _gatewayRequestQueries.GetRSIMessagesFromDbAsync();
-            var responseList = await _grpcMessageService.SendBulkRsiMessages(messages);
+            var responseList = await _messageDispatchService.SendBulkRsiMessages(messages);
             //aynsc loop to publish event for every item
             await LoopAsync(responseList);
         }
@@ -59,12 +60,13 @@ public class RestartConsumerRequestIntegrationEventHandler : IIntegrationEventHa
         return Task.CompletedTask;
     }
 
-    private async Task LoopAsync(IEnumerable<RsiMessageRecievedDataModel> sentMessages)
+    private async Task LoopAsync<T>(IEnumerable<T> sentMessages)
     {
         List<Task> listOfTasks = new List<Task>();
 
-        foreach (var message in sentMessages)
+        foreach (var rawMessage in sentMessages)
         {
+            var message = rawMessage as RsiMessageRecievedDataModel;
             listOfTasks.Add(DispatchPublishedEvent(message));
         }
 

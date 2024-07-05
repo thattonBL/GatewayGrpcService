@@ -11,6 +11,7 @@ using Events.Common.Events;
 using GatewayGrpcService.Infrastructure;
 using GatewayGrpcService.Protos;
 using Serilog;
+using GatewayGrpcService.Factories;
 
 namespace GatewayGrpcService
 {
@@ -49,14 +50,18 @@ namespace GatewayGrpcService
                 //cfg.AddOpenBehavior(typeof(TransactionBehaviour<,>));
             });
 
-            builder.Services.AddScoped<GrpcMessageService>();
-
             builder.Services.AddTransient<GrpcExceptionInterceptor>();
             builder.Services.AddGrpcClient<GatewayGrpcMessagingService.GatewayGrpcMessagingServiceClient>((services, options) =>
             {
-                var building33MockApiAddress = builder.Configuration["GrpcServices:Building33MockApiUri"];
+                var building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
                 options.Address = new Uri(building33MockApiAddress);
             }).AddInterceptor<GrpcExceptionInterceptor>();
+
+            builder.Services.AddHttpClient<HttpMessageDispatchService>((services, client) =>
+            {
+                var building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
+                client.BaseAddress = new Uri(building33MockApiAddress);
+            });
             
             builder.Services.AddGrpc().AddJsonTranscoding();
             builder.Services.AddGrpcReflection();
@@ -81,6 +86,10 @@ namespace GatewayGrpcService
             builder.Services.AddScoped<IGatewayGrpcMessageRepo, GatewayGrpcMessageRepo>();
 
             builder.Services.AddSingleton<IMessageServiceControl, MessageServiceControl>();
+
+            builder.Services.AddScoped<GrpcMessageDispatchService>();
+            builder.Services.AddScoped<HttpMessageDispatchService>();
+            builder.Services.AddScoped<IMessageDispatchServiceFacrory, MessageDispatchServiceFacrory>();
 
             var app = builder.Build();
 

@@ -7,3 +7,6 @@ obj
 .vs/GatewayGrpcService/v17
 .vs/ProjectEvaluation
 .vs
+BuildingBlocks/EventBus/bin
+GatewayGrpcService/Properties/PublishProfiles
+*.user

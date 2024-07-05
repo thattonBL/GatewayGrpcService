@@ -10,6 +10,11 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["GatewayGrpcService/GatewayGrpcService.csproj", "GatewayGrpcService/"]
+COPY ["Common/Events.Common/Events.Common.csproj", "Common/Events.Common/"]
+COPY ["BuildingBlocks/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "BuildingBlocks/IntegrationEventLogEF/"]
+COPY ["BuildingBlocks/EventBus/EventBus.csproj", "BuildingBlocks/EventBus/"]
+COPY ["Common/Services.Common/Services.Common.csproj", "Common/Services.Common/"]
+COPY ["BuildingBlocks/EventBusServiceBus/EventBusServiceBus.csproj", "BuildingBlocks/EventBusServiceBus/"]
 RUN dotnet restore "./GatewayGrpcService/./GatewayGrpcService.csproj"
 COPY . .
 WORKDIR "/src/GatewayGrpcService"

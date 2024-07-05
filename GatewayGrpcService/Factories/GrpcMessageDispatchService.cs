@@ -3,24 +3,28 @@ using GatewayGrpcService.Models;
 using GatewayGrpcService.Protos;
 using GatewayGrpcService.Queries;
 using System.Globalization;
-
-
-namespace GatewayGrpcService.Services
+namespace GatewayGrpcService.Factories
 {
-    public class GrpcMessageService : GatewayGrpcMessagingService.GatewayGrpcMessagingServiceBase
+    public class GrpcMessageDispatchService : GatewayGrpcMessagingService.GatewayGrpcMessagingServiceBase, IMessageDispatchService
     {
         private readonly GatewayGrpcMessagingService.GatewayGrpcMessagingServiceClient _gatewayMessagingClient;
         private readonly IGatewayRequestQueries _gatewayRequestQueries;
-        
-        public GrpcMessageService(GatewayGrpcMessagingService.GatewayGrpcMessagingServiceClient gatewayMessagingClient, IGatewayRequestQueries gatewayRequestQueries)
+
+        public GrpcMessageDispatchService()
+        {
+
+        }
+
+        public GrpcMessageDispatchService(GatewayGrpcMessagingService.GatewayGrpcMessagingServiceClient gatewayMessagingClient, IGatewayRequestQueries gatewayRequestQueries)
         {
             _gatewayMessagingClient = gatewayMessagingClient;
             _gatewayRequestQueries = gatewayRequestQueries;
         }
 
-        public async Task<RsiMessageRecievedDataModel> SendSingleRsiMessage(RsiPostItem rawMessageData)
+        public async Task<RsiMessageRecievedDataModel> SendSingleRsiMessage<T>(T messageData)
         {
             var request = new Protos.RSIMessage();
+            var rawMessageData = messageData as RsiPostItem;
             request.CollectionCode = rawMessageData.CollectionCode;
             request.Shelfmark = rawMessageData.Shelfmark;
             request.VolumeNumber = rawMessageData.VolumeNumber;
@@ -46,7 +50,7 @@ namespace GatewayGrpcService.Services
             request.ReaderName = rawMessageData.ReaderName;
             request.ReaderType = Int32.Parse(rawMessageData.ReaderType);
             request.OperatorInformation = rawMessageData.OperatorInformation;
-            request.ItemIdentity = rawMessageData.ItemIdentity; 
+            request.ItemIdentity = rawMessageData.ItemIdentity;
             var response = await _gatewayMessagingClient.CreateStorageItemRequestAsync(request);
             //Publish Mesaage Sent Integration Event
             return new RsiMessageRecievedDataModel
@@ -55,7 +59,7 @@ namespace GatewayGrpcService.Services
             };
         }
 
-        public async Task<IEnumerable<RsiMessageRecievedDataModel>> SendBulkRsiMessages(IEnumerable<Queries.RSIMessage> messageData)
+        public async Task<IEnumerable<RsiMessageRecievedDataModel>> SendBulkRsiMessages<T>(IEnumerable<T> messageData)
         {
             var responseList = new List<RsiMessageRecievedDataModel>();
             await LoopAsync(messageData, responseList);
@@ -68,13 +72,14 @@ namespace GatewayGrpcService.Services
             return Task.CompletedTask;
         }
 
-        public async Task LoopAsync(IEnumerable<Queries.RSIMessage> sentMessages, List<RsiMessageRecievedDataModel> responseList)
+        public async Task LoopAsync<T>(IEnumerable<T> sentMessages, List<RsiMessageRecievedDataModel> responseList)
         {
             List<Task> listOfTasks = new List<Task>();
 
-            foreach (var message in sentMessages)
+            foreach (var rawMessage in sentMessages)
             {
                 var responseMessage = new Protos.RSIMessage();
+                var message = rawMessage as Queries.RSIMessage;
                 responseMessage.Id = message.id;
                 responseMessage.CollectionCode = message.collection_code;
                 responseMessage.Shelfmark = message.shelfmark;
@@ -101,7 +106,7 @@ namespace GatewayGrpcService.Services
 
                 var response = await _gatewayMessagingClient.CreateStorageItemRequestAsync(responseMessage);
                 //Publish Mesaage Sent Integration Event
-                listOfTasks.Add(AddToList(new RsiMessageRecievedDataModel{ItemIdentity = response.ItemIdentity}, responseList));
+                listOfTasks.Add(AddToList(new RsiMessageRecievedDataModel { ItemIdentity = response.ItemIdentity }, responseList));
             }
 
             await Task.WhenAll(listOfTasks);

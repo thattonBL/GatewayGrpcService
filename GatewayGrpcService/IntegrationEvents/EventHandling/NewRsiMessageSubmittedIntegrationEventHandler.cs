@@ -1,6 +1,7 @@
 ﻿using EventBus.Abstractions;
 using Events.Common.Events;
 using GatewayGrpcService.Data;
+using GatewayGrpcService.Factories;
 using GatewayGrpcService.IntegrationEvents.Events;
 using GatewayGrpcService.Services;
 using System.Globalization;
@@ -12,15 +13,15 @@ namespace GatewayGrpcService.IntegrationEvents.EventHandling
         private readonly ILogger<NewRsiMessageSubmittedIntegrationEventHandler> _logger;
         private readonly IEventBus _eventBus;
         private readonly ISQLMessageServices _sqlMessageServices;
-        private readonly GrpcMessageService _grpcMessageService;
+        private readonly IMessageDispatchService _messageDispatchService;
         private readonly IMessageServiceControl _messageServiceControl;
         
-        public NewRsiMessageSubmittedIntegrationEventHandler(GrpcMessageService grpcMessageService, ISQLMessageServices sqlMessageService, IMessageServiceControl messageServiceControl, IEventBus eventBus, ILogger<NewRsiMessageSubmittedIntegrationEventHandler> logger)
+        public NewRsiMessageSubmittedIntegrationEventHandler(IMessageDispatchServiceFacrory messageDispatchFactory, ISQLMessageServices sqlMessageService, IMessageServiceControl messageServiceControl, IEventBus eventBus, ILogger<NewRsiMessageSubmittedIntegrationEventHandler> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _sqlMessageServices = sqlMessageService ?? throw new ArgumentNullException(nameof(sqlMessageService));
-            _grpcMessageService = grpcMessageService ?? throw new ArgumentNullException(nameof(grpcMessageService));
+            _messageDispatchService = messageDispatchFactory.GetDispatchService();
             _messageServiceControl = messageServiceControl ?? throw new ArgumentNullException(nameof(messageServiceControl));
         }
 
@@ -39,7 +40,7 @@ namespace GatewayGrpcService.IntegrationEvents.EventHandling
                 try
                 {
                     //if it isn't then send the message using the data from the event
-                    await _grpcMessageService.SendSingleRsiMessage(@event.RsiMessage);
+                    await _messageDispatchService.SendSingleRsiMessage(@event.RsiMessage);
                 }
                 catch(Exception ex)
                 {

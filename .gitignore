@@ -10,3 +10,5 @@ obj
 BuildingBlocks/EventBus/bin
 GatewayGrpcService/Properties/PublishProfiles
 *.user
+BuildingBlocks
+Common

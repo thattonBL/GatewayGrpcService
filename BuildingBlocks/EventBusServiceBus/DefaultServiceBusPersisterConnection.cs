@@ -17,7 +17,7 @@ public class DefaultServiceBusPersisterConnection : IServiceBusPersisterConnecti
     public DefaultServiceBusPersisterConnection(string serviceBusConnectionString)
     {
         _serviceBusConnectionString = serviceBusConnectionString;
-        _subscriptionClient = new ServiceBusAdministrationClient(_serviceBusConnectionString);
+         _subscriptionClient = new ServiceBusAdministrationClient(_serviceBusConnectionString);
         _topicClient = new ServiceBusClient(_serviceBusConnectionString);
     }
 

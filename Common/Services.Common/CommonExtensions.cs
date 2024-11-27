@@ -73,14 +73,20 @@ public static class CommonExtensions
             return services;
         }
 
-        var evtBusHost = String.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSG_HOST")) ? 
+        //Connection for RabbitMQ connection when running locally in isolation or in docker compose environment
+        var rabbitBusHost = String.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSG_HOST")) ? 
                                         eventBusSection["HostName"] : Environment.GetEnvironmentVariable("MSG_HOST");
 
         if (string.Equals(eventBusSection["ProviderName"], "ServiceBus", StringComparison.OrdinalIgnoreCase))
         {
             services.AddSingleton<IServiceBusPersisterConnection>(sp =>
             {
-                var serviceBusConnectionString = configuration.GetRequiredConnectionString("EventBus");
+                //check the Environment vars first or a connection string and if not get it from config
+                var serviceBusConnectionString = String.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SERVICE_BUS_CONNECTION_STRING")) ? configuration.GetRequiredConnectionString("EventBus") : Environment.GetEnvironmentVariable("AZURE_SERVICE_BUS_CONNECTION_STRING");
+                if (String.IsNullOrEmpty(serviceBusConnectionString))
+                {
+                    throw new Exception("No Service Bus Connection defined");
+                }
                 return new DefaultServiceBusPersisterConnection(serviceBusConnectionString);
             });
 
@@ -103,7 +109,7 @@ public static class CommonExtensions
 
                 var factory = new ConnectionFactory()
                 {
-                    HostName = evtBusHost,
+                    HostName = rabbitBusHost,
                     DispatchConsumersAsync = true
                 };
 

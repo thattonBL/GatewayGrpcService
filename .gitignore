@@ -10,3 +10,8 @@ obj
 BuildingBlocks/EventBus/bin
 GatewayGrpcService/Properties/PublishProfiles
 *.user
+BuildingBlocks/EventBusRabbitMQ/bin
+BuildingBlocks/EventBusServiceBus/bin
+BuildingBlocks/IntegrationEventLogEF/bin
+Common/Events.Common/bin
+Common/Services.Common/bin

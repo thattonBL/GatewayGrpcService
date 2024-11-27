@@ -84,17 +84,29 @@ namespace GatewayGrpcService
                 //cfg.AddOpenBehavior(typeof(TransactionBehaviour<,>));
             });
 
+
+
             builder.Services.AddTransient<GrpcExceptionInterceptor>();
+
+            var building33MockApiAddress = Environment.GetEnvironmentVariable("CLIENT_BASE_URL");
+            if (String.IsNullOrEmpty(connectionString))
+            {
+                building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
+            }
+
+            if (String.IsNullOrEmpty(building33MockApiAddress))
+            {
+                throw new Exception("building33MockApiAddress not set");
+            }
+
             builder.Services.AddGrpcClient<GatewayGrpcMessagingService.GatewayGrpcMessagingServiceClient>((services, options) =>
             {
-                var building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
                 options.Address = new Uri(building33MockApiAddress);
             }).AddInterceptor<GrpcExceptionInterceptor>();
 
             builder.Services.AddHttpClient<HttpMessageDispatchService>((services, client) =>
             {
-                var building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
-                client.BaseAddress = new Uri(building33MockApiAddress);
+               client.BaseAddress = new Uri(building33MockApiAddress);
             });
             
             builder.Services.AddGrpc().AddJsonTranscoding();

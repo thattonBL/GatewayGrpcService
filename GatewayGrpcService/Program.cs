@@ -89,7 +89,7 @@ namespace GatewayGrpcService
             builder.Services.AddTransient<GrpcExceptionInterceptor>();
 
             var building33MockApiAddress = Environment.GetEnvironmentVariable("CLIENT_BASE_URL");
-            if (String.IsNullOrEmpty(connectionString))
+            if (String.IsNullOrEmpty(building33MockApiAddress))
             {
                 building33MockApiAddress = builder.Configuration["MessageServices:Building33MockApiUri"];
             }

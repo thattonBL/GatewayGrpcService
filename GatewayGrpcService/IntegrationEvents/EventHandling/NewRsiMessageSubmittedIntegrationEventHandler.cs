@@ -28,6 +28,7 @@ namespace GatewayGrpcService.IntegrationEvents.EventHandling
         //TODO: We need to wrap this in a Behaviour as per the CQRS pattern in the GatewyRequestAPI
         public async Task Handle(NewRsiMessageSubmittedIntegrationEvent @event)
         {
+            
             var newRsiMessageRecievedEvent = new NewRsiMessageRecievedIntegrationEvent(@event.RsiMessage.Identifier, NewRsiMessageRecievedIntegrationEvent.EVENT_NAME, "GatewayGrpcService");
             // add event to Redis Cache maybe?
             await Task.Run( () => _eventBus.Publish(newRsiMessageRecievedEvent));
@@ -60,7 +61,8 @@ namespace GatewayGrpcService.IntegrationEvents.EventHandling
                                             DateTime.ParseExact(rawRsi.PeriodicalDate, "dd-MM-yyyy", CultureInfo.InvariantCulture), rawRsi.ArticleLine1, rawRsi.ArticleLine2, rawRsi.CatalogueRecordUrl, rawRsi.FurtherDetailsUrl,
                                                 rawRsi.DtRequired, rawRsi.Route, rawRsi.ReadingRoomStaffArea, rawRsi.SeatNumber, rawRsi.ReadingCategory, rawRsi.Identifier,
                                                     rawRsi.ReaderName, Int32.Parse(rawRsi.ReaderType), rawRsi.OperatorInformation, rawRsi.ItemIdentity);
-
+                    
+                    //We need to put an execution strategy around this with retries do deal with Azure flakiness 
                     await _sqlMessageServices.AddNewRsiMessage(rsiPoco);
                 }
                 catch(Exception ex)

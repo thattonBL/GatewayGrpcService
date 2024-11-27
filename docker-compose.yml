@@ -51,9 +51,7 @@ services:
             - gatewayrabbitmq
             - gatewaygrpcdb
       environment:
-            - DB_HOST=gateway-grpc-db
-            - DB_NAME=Gateway
-            - DB_SA_PASSWORD=password@12345#
+            - SQL_DB_CONNECTION_STRING='Data Source=gateway-grpc-db;Database=Gateway;Integrated Security=False;User ID=sa;Password=password@12345#;MultipleActiveResultSets=false;TrustServerCertificate=True'
             - MSG_HOST=gateway-rabbitmq
       networks:
             - gatewaynetwork

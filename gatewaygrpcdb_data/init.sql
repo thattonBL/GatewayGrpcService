@@ -1,9 +1,9 @@
-IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'Gateway')
+IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'Gateway_GRPC')
   BEGIN
-    CREATE DATABASE Gateway
+    CREATE DATABASE Gateway_GRPC
     ON PRIMARY(
-        NAME = N'Gateway',
-        FILENAME = N'/var/opt/mssql/data/Gateway.mdf',
+        NAME = N'Gateway_GRPC',
+        FILENAME = N'/var/opt/mssql/data/Gateway_GRPC.mdf',
         SIZE = 10240KB,
         MAXSIZE = UNLIMITED,
         FILEGROWTH = 1024KB
@@ -11,14 +11,14 @@ IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'Gateway')
   END
 GO
 
-USE Gateway
+USE Gateway_GRPC
 GO
 
 -- CREATE THE TABLES 
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[Common]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[Common]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.Common (
+  CREATE TABLE Gateway_GRPC.dbo.Common (
     id int IDENTITY,
     msg_status varchar(50) NULL,
     msg_source varchar(50) NULL,
@@ -33,9 +33,9 @@ BEGIN
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[RSI]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[RSI]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.RSI (
+  CREATE TABLE Gateway_GRPC.dbo.RSI (
     id int IDENTITY,
     collection_code varchar(50) NULL,
     shelfmark varchar(50) NULL,
@@ -63,18 +63,18 @@ BEGIN
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[messageTypeLookup]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[messageTypeLookup]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.messageTypeLookup (
+  CREATE TABLE Gateway_GRPC.dbo.messageTypeLookup (
     id int IDENTITY,
     type varchar(50) NULL,
     CONSTRAINT PK_messageType_id PRIMARY KEY CLUSTERED (id)
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[REA]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[REA]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.REA (
+  CREATE TABLE Gateway_GRPC.dbo.REA (
     id int IDENTITY,
     dt_of_action varchar(50) NULL,
     request_response_flag varchar(50) NULL,
@@ -87,9 +87,9 @@ BEGIN
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[REC]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[REC]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.REC (
+  CREATE TABLE Gateway_GRPC.dbo.REC (
     id int IDENTITY,
     dt_of_action varchar(50) NULL,
     request_response_flag varchar(50) NULL,
@@ -101,18 +101,18 @@ BEGIN
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[RIR]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[RIR]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.RIR (
+  CREATE TABLE Gateway_GRPC.dbo.RIR (
     id int IDENTITY,
     outcome varchar(50) NULL,
     reason varchar(50) NULL,
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[RSI]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[RSI]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.RSI (
+  CREATE TABLE Gateway_GRPC.dbo.RSI (
     id int IDENTITY,
     collection_code varchar(50) NULL,
     shelfmark varchar(50) NULL,
@@ -140,9 +140,9 @@ BEGIN
   )
 END
 
-IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway].[dbo].[IntegrationEventLog]') AND type in (N'U'))
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Gateway_GRPC].[dbo].[IntegrationEventLog]') AND type in (N'U'))
 BEGIN
-  CREATE TABLE Gateway.dbo.IntegrationEventLog (
+  CREATE TABLE Gateway_GRPC.dbo.IntegrationEventLog (
     EventId uniqueidentifier NOT NULL,
     Content nvarchar(max) NOT NULL,
     CreationTime datetime2 NOT NULL,
@@ -161,29 +161,29 @@ GO
 
 -- ADD DATA --
 BEGIN
-  IF NOT EXISTS(SELECT top 1 1 FROM Gateway.dbo.messageTypeLookup)
+  IF NOT EXISTS(SELECT top 1 1 FROM Gateway_GRPC.dbo.messageTypeLookup)
   BEGIN
     
-    INSERT Gateway.dbo.messageTypeLookup(type) VALUES ('RSI')
-    INSERT Gateway.dbo.messageTypeLookup(type) VALUES ('RIR')
-    INSERT Gateway.dbo.messageTypeLookup(type) VALUES ('REA')
-    INSERT Gateway.dbo.messageTypeLookup(type) VALUES ('REC')
+    INSERT Gateway_GRPC.dbo.messageTypeLookup(type) VALUES ('RSI')
+    INSERT Gateway_GRPC.dbo.messageTypeLookup(type) VALUES ('RIR')
+    INSERT Gateway_GRPC.dbo.messageTypeLookup(type) VALUES ('REA')
+    INSERT Gateway_GRPC.dbo.messageTypeLookup(type) VALUES ('REC')
 
-    INSERT INTO Gateway.dbo.RSI(collection_code, shelfmark, volume_number, storage_location_code, author, title, publication_date, periodical_date, article_line1, article_line2, catalogue_record_url, further_details_url, dt_required, route, reading_room_staff_area, seat_number, reading_category, identifier, reader_name, reader_type, operator_information, item_identity) VALUES ('CODE', 'SHLMK1234', '1', '33', 'T HATTON', 'My Life', '1990-03-22 00:00:00.000', '2024-03-13 00:00:00.000', 'My Life In Summary', 'Is Great and Wonderful', 'http://comecatalogue/url', 'http://some/further/details', NULL, '66', 'Yes', '15', 'Biographies', 'GB1234', 'Martin Boswell', 4, 'Charlie', '123456789');
+    INSERT INTO Gateway_GRPC.dbo.RSI(collection_code, shelfmark, volume_number, storage_location_code, author, title, publication_date, periodical_date, article_line1, article_line2, catalogue_record_url, further_details_url, dt_required, route, reading_room_staff_area, seat_number, reading_category, identifier, reader_name, reader_type, operator_information, item_identity) VALUES ('CODE', 'SHLMK1234', '1', '33', 'T HATTON', 'My Life', '1990-03-22 00:00:00.000', '2024-03-13 00:00:00.000', 'My Life In Summary', 'Is Great and Wonderful', 'http://comecatalogue/url', 'http://some/further/details', NULL, '66', 'Yes', '15', 'Biographies', 'GB1234', 'Martin Boswell', 4, 'Charlie', '123456789');
       
   END
 END
 
 BEGIN
-  IF NOT EXISTS(SELECT top 1 1 FROM Gateway.dbo.Common)
+  IF NOT EXISTS(SELECT top 1 1 FROM Gateway_GRPC.dbo.Common)
   BEGIN
-    INSERT INTO Gateway.dbo.Common(msg_status, msg_source, msg_target, prty, type, ref_source, ref_request_id, ref_seq_no, dt_created) VALUES ('Processing', 'B33', 1, NULL, 1, NULL, NULL, NULL, '2024-03-13 00:00:00.000');
+    INSERT INTO Gateway_GRPC.dbo.Common(msg_status, msg_source, msg_target, prty, type, ref_source, ref_request_id, ref_seq_no, dt_created) VALUES ('Processing', 'B33', 1, NULL, 1, NULL, NULL, NULL, '2024-03-13 00:00:00.000');
   END
 END
 
 -- ADD FOREIGN KEYS --
 
-ALTER TABLE Gateway.dbo.Common
+ALTER TABLE Gateway_GRPC.dbo.Common
   ADD CONSTRAINT FK_Common_messageTypeLookup_id FOREIGN KEY (type) REFERENCES dbo.messageTypeLookup (id)
 GO
 

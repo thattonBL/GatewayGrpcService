@@ -27,14 +27,13 @@ namespace GatewayGrpcService
             builder.AddServiceDefaults();
 
             // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
-            var dbName = Environment.GetEnvironmentVariable("DB_NAME");
-            var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD");
+            //Adds the Event Bus required for integration events
+            builder.AddServiceDefaults();
 
-            if (connectionString != null)
+            var connectionString = Environment.GetEnvironmentVariable("SQL_DB_CONNECTION_STRING");
+            if (String.IsNullOrEmpty(connectionString))
             {
-                connectionString = connectionString.Replace("{#host}", dbHost).Replace("{#dbName}", dbName).Replace("{#dbPassword}", dbPassword);
+                connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             }
 
             builder.Services.AddScoped<IGatewayRequestQueries>(sp =>
@@ -56,17 +55,22 @@ namespace GatewayGrpcService
             //        });
             //});
 
+            //builder.Host.UseSerilog((context, configuration) =>
+            //{
+            //    var httpAccessor = context.Configuration.Get<HttpContextAccessor>();
+            //    configuration.ReadFrom.Configuration(context.Configuration)
+            //                 .Enrich.WithEcsHttpContext(httpAccessor)
+            //                 .Enrich.WithEnvironmentName()
+            //                 .WriteTo.ElasticCloud(context.Configuration["ElasticCloud:CloudId"], context.Configuration["ElasticCloud:CloudUser"], context.Configuration["ElasticCloud:CloudPass"], opts =>
+            //                 {
+            //                     opts.DataStream = new Elastic.Ingest.Elasticsearch.DataStreams.DataStreamName("gateway-grpc-service-new-logs");
+            //                     opts.BootstrapMethod = BootstrapMethod.Failure;
+            //                 });
+            //});
+
             builder.Host.UseSerilog((context, configuration) =>
             {
-                var httpAccessor = context.Configuration.Get<HttpContextAccessor>();
-                configuration.ReadFrom.Configuration(context.Configuration)
-                             .Enrich.WithEcsHttpContext(httpAccessor)
-                             .Enrich.WithEnvironmentName()
-                             .WriteTo.ElasticCloud(context.Configuration["ElasticCloud:CloudId"], context.Configuration["ElasticCloud:CloudUser"], context.Configuration["ElasticCloud:CloudPass"], opts =>
-                             {
-                                 opts.DataStream = new Elastic.Ingest.Elasticsearch.DataStreams.DataStreamName("gateway-grpc-service-new-logs");
-                                 opts.BootstrapMethod = BootstrapMethod.Failure;
-                             });
+                configuration.ReadFrom.Configuration(context.Configuration);
             });
 
             var services = builder.Services;

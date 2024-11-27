@@ -1,47 +1,45 @@
-name: Trigger auto deployment for gateway-grpc-service
+name: Build and Publish Docker Image to Docker Hub and Trigger Azure Release
 
-# When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
   push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/gateway-grpc-service-AutoDeployTrigger-2ceacf9d-1b4d-430c-ae22-5a57deea4a3f.yml'
-
-  # Allow manual trigger 
-  workflow_dispatch:      
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  build-and-publish:
     runs-on: ubuntu-latest
-    permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
 
     steps:
-      - name: Checkout to the branch
+      # Step 1: Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Azure Login
-        uses: azure/login@v1
+      # Step 2: Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          client-id: ${{ secrets.GATEWAYGRPCSERVICE_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.GATEWAYGRPCSERVICE_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.GATEWAYGRPCSERVICE_AZURE_SUBSCRIPTION_ID }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
+      # Step 3: Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/gatewaygrpcservice:latest -f GatewayGrpcService/Dockerfile .
+
+      # Step 4: Push Docker image to Docker Hub
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/gatewaygrpcservice:latest
+
+      # Step 5: Trigger Azure Release Pipeline
+      - name: Trigger Azure DevOps Pipeline
+        uses: Azure/pipelines@v1.2
         with:
-          appSourcePath: ${{ github.workspace }} 
-          registryUrl: gatewayrequestapireg.azurecr.io
-          registryUsername: ${{ secrets.GATEWAYGRPCSERVICE_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.GATEWAYGRPCSERVICE_REGISTRY_PASSWORD }}
-          containerAppName: gateway-grpc-service
-          resourceGroup: GatewayResources
-          imageToBuild: gatewayrequestapireg.azurecr.io/gateway-grpc-service:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
-
-
+          azure-devops-project-url: ${{ secrets.AZURE_DEVOPS_PROJECT_URL }}
+          azure-pipeline-name: 'thattonBL.GatewayGrpcService'
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_PAT }}
+      
+      - uses: actions/checkout@v2

@@ -11,6 +11,7 @@ public class HttpMessageDispatchService : IMessageDispatchService
     private readonly IConfiguration _configuration;
     private readonly ILogger<HttpMessageDispatchService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly string _endpointBaseUrl;
 
     public HttpMessageDispatchService()
     {
@@ -22,6 +23,7 @@ public class HttpMessageDispatchService : IMessageDispatchService
         _configuration = configuration;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _endpointBaseUrl = !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("CLIENT_BASE_URL")) ? Environment.GetEnvironmentVariable("CLIENT_BASE_URL") : _configuration["MessageServices:Building33MockApiUri"];
     }
 
     public async Task<IEnumerable<RsiMessageRecievedDataModel>> SendBulkRsiMessages<T>(IEnumerable<T> messageData)
@@ -37,7 +39,7 @@ public class HttpMessageDispatchService : IMessageDispatchService
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, Path.Combine(_configuration["MessageServices:Building33MockApiUri"],"api/Message"));
+                var request = new HttpRequestMessage(HttpMethod.Post, Path.Combine(_endpointBaseUrl, "api/Message"));
                 request.Content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8, "application/json");
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
@@ -98,7 +100,7 @@ public class HttpMessageDispatchService : IMessageDispatchService
                         ItemIdentity = message.item_identity
                     };
                     
-                    var request = new HttpRequestMessage(HttpMethod.Post, Path.Combine(_configuration["MessageServices:Building33MockApiUri"], "api/Message"));
+                    var request = new HttpRequestMessage(HttpMethod.Post, Path.Combine(_endpointBaseUrl, "api/Message"));
                     request.Content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8, "application/json");
                     var response = await httpClient.SendAsync(request);
                     response.EnsureSuccessStatusCode();

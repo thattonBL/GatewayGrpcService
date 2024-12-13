@@ -15,6 +15,8 @@ using GatewayGrpcService.Factories;
 using Elastic.CommonSchema.Serilog;
 using Elastic.Serilog.Sinks;
 using Elastic.Ingest.Elasticsearch;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 namespace GatewayGrpcService
 {
@@ -137,6 +139,31 @@ namespace GatewayGrpcService
             builder.Services.AddScoped<HttpMessageDispatchService>();
             builder.Services.AddScoped<IMessageDispatchServiceFacrory, MessageDispatchServiceFacrory>();
 
+            // Add health checks
+            var hcBuilder = builder.Services.AddHealthChecks();
+
+            // Add GRPC database health check
+            hcBuilder.AddSqlServer(
+                connectionString,
+                name: "GRPC DB");
+
+            // Get which message bus is being used and add the relevant health check
+            if (string.Equals(builder.Configuration["EventBus:ProviderName"], "ServiceBus", StringComparison.OrdinalIgnoreCase))
+            {
+                // Add Azure Serice Bus health check
+                hcBuilder.AddAzureServiceBusTopic(
+                    builder.Configuration.GetRequiredConnectionString("EventBus"),
+                    topicName: builder.Configuration["EventBus:HealthCheckTopicName"],
+                    name: "Azure Service Bus");
+            }
+            else
+            {
+                // Add RabbitMQ health check
+                hcBuilder.AddRabbitMQ(
+                    builder.Configuration.GetRequiredConnectionString("EventBus"),
+                    name: "RabbitMQ");
+            }
+
             var app = builder.Build();
 
             app.Use((context, next) =>
@@ -160,6 +187,11 @@ namespace GatewayGrpcService
             app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
             app.MapSwagger();
             app.MapGrpcReflectionService();
+            app.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.UseSerilogRequestLogging();
 

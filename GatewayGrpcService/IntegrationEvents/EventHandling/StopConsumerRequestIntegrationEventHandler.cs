@@ -1,4 +1,4 @@
-﻿using EventBus.Abstractions;
+﻿using BL.Gateway.EventBus.Abstractions;
 using GatewayGrpcService.IntegrationEvents.Events;
 using GatewayGrpcService.Services;
 using MediatR;

@@ -1,4 +1,4 @@
-﻿using EventBus.Events;
+﻿using BL.Gateway.EventBus.Events;
 
 namespace GatewayGrpcService.IntegrationEvents.Events;
 

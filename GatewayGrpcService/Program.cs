@@ -1,20 +1,16 @@
-using EventBus.Abstractions;
+using BL.Gateway.EventBus.Abstractions;
 using GatewayGrpcService.IntegrationEvents.EventHandling;
 using GatewayGrpcService.IntegrationEvents.Events;
 using GatewayGrpcService.Queries;
 using GatewayGrpcService.Services;
-using Services.Common;
+using BL.Gateway.Services.Common;
 using GatewayGrpcService.Data;
 using Microsoft.EntityFrameworkCore;
 using GatewayGrpcService.Data.Repostories;
-using Events.Common.Events;
 using GatewayGrpcService.Infrastructure;
 using GatewayGrpcService.Protos;
 using Serilog;
 using GatewayGrpcService.Factories;
-using Elastic.CommonSchema.Serilog;
-using Elastic.Serilog.Sinks;
-using Elastic.Ingest.Elasticsearch;
 
 namespace GatewayGrpcService
 {

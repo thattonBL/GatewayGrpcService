@@ -1,4 +1,4 @@
-﻿using EventBus.Abstractions;
+﻿using BL.Gateway.EventBus.Abstractions;
 using GatewayGrpcService.Factories;
 using GatewayGrpcService.IntegrationEvents.Events;
 using GatewayGrpcService.Models;

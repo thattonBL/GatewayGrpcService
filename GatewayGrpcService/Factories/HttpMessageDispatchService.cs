@@ -1,4 +1,4 @@
-﻿using Events.Common;
+﻿using BL.Gateway.Events.Common;
 using GatewayGrpcService.Models;
 using GatewayGrpcService.Queries;
 using Newtonsoft.Json;

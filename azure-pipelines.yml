@@ -7,12 +7,23 @@ variables:
   AZURE_CONTAINER_APP_NAME: 'gateway-grpc-service-iac'
   RESOURCE_GROUP: 'Gateway-Resources-IAC'
   DOCKER_IMAGE: 'attonbomb/gatewaygrpcservice:latest'  # Replace with your Docker Hub image path
+  AZURE_SUBSCRIPTION: 'Gateway-Resources-IAC-MI-Conn-2'
 
 steps:
   - task: Docker@2
     inputs:
       command: 'login'
       containerRegistry: 'attonbomb-DockerHub-SC'
+  # Set the Azure subscription based on the branch
+  - script: |
+      echo "Determining Azure subscription..."
+      if [ "$(Build.SourceBranchName)" = "development" ]; then
+        echo "##vso[task.setvariable variable=AZURE_SUBSCRIPTION]Dev-Gateway-Resources-MS"
+        echo "##vso[task.setvariable variable=DOCKER_IMAGE]attonbomb/gatewaygrpcservice:develop"
+      else
+        echo "##vso[task.setvariable variable=AZURE_SUBSCRIPTION]Gateway-Resources-IAC-MI-Conn-2"
+      fi
+    displayName: 'Set Azure Subscription'
 
   - task: AzureCLI@2
     inputs:

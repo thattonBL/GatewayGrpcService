@@ -19,7 +19,7 @@ steps:
       echo "Determining Azure subscription..."
       if [ "$(Build.SourceBranchName)" = "development" ]; then
         echo "##vso[task.setvariable variable=AZURE_SUBSCRIPTION]Dev-Gateway-Resources-MS"
-        echo "##vso[task.setvariable variable=DOCKER_IMAGE]attonbomb/gatewaygrpcservice:develop"
+        echo "##vso[task.setvariable variable=DOCKER_IMAGE]attonbomb/gatewaygrpcservice:dev"
       else
         echo "##vso[task.setvariable variable=AZURE_SUBSCRIPTION]Gateway-Resources-IAC-MI-Conn-2"
       fi
@@ -36,9 +36,9 @@ steps:
         
         # Update the Azure Container App to pull the latest image
         az containerapp update \
-          --name gateway-grpc-service-iac
-          --resource-group Gateway-IAC-Resources
-          --image attonbomb/gatewaygrpcservice:latest
+          --name gateway-grpc-service-iac \
+          --resource-group Gateway-IAC-Resources \
+          --image $(DOCKER_IMAGE) \
           --registry-server hub.docker.com
 
         echo "Global Integration API Container App updated successfully"
